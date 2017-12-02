@@ -1,0 +1,25 @@
+{
+  "name": "nextjs-starter-kit",
+  "version": "1.0.0",
+  "description": "Next.js starter kit",
+  "author": "soulmachine@gmail.com",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soulmachine/nextjs-starter-kit.git"
+  },
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "antd": "^2.13.10",
+    "next": "^4.1.4",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
+  },
+  "devDependencies": {
+    "babel-plugin-import": "^1.6.2"
+  }
+}
