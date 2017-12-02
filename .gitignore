@@ -57,3 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 
+# from https://github.com/zeit/next.js/blob/canary/.gitignore
+dist
+.next
+package-lock.json
+.DS_Store
