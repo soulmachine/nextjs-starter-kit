@@ -118,7 +118,13 @@ Enable it in `.babelrc`, the `.babelrc` file is copied from the official example
 
 ## 2.3 Import Antd CSS
 
-Note that although we've enabled the plugin, but we pass `false` to the plugin's config to tell it to skip all CSS from antd, instead we'll load antd's css from CDN. Create a file `index.js` in the project root directory with the following code:
+Note that although we've enabled the plugin, but we pass `false` to the plugin's config to tell it to skip all CSS from antd, instead we'll load antd's css from CDN. This ugly solution is due to the issue that Next.js can only import CSS using [styled-jsx](https://github.com/zeit/styled-jsx) or CSS-in-JS built in with jsx syntax and Next.js is not able to use css-loader. See the warning from official page <https://github.com/zeit/next.js/#customizing-webpack-config>:
+
+> Warning: Adding loaders to support new file types (css, less, svg, etc.) is not recommended because only the client code gets bundled via webpack and thus it won't work on the initial server rendering. Babel plugins are a good alternative because they're applied consistently between server/client rendering
+
+Also see this issue [Work with antd? · Issue #484](https://github.com/zeit/next.js/issues/484) and this [Importing CSS files? · Issue #544](https://github.com/zeit/next.js/issues/544).
+
+Create a file `index.js` in the project root directory with the following code:
 
 ```jsx
 import Head from 'next/head'
