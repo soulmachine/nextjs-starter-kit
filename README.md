@@ -7,6 +7,7 @@ Table of Contents
 1. [Step1: Create an empty Next.js project](#step1-create-an-empty-nextjs-project)
 1. [Step2: Ant Design](#step2-ant-design)
 1. [Step3: MobX](#step3-mobx)
+1. [Step4: React Intl](#step4-react-intl)
 
 
 
@@ -125,7 +126,7 @@ Note that although we've enabled the plugin, but we pass `false` to the plugin's
 
 Also see this issue [Work with antd? · Issue #484](https://github.com/zeit/next.js/issues/484) and this [Importing CSS files? · Issue #544](https://github.com/zeit/next.js/issues/544).
 
-Create a file `./components/layout.js` in the project root directory with the following code:
+Create a file `./components/Layout.js` in the project root directory with the following code:
 
 ```jsx
 import Head from 'next/head'
@@ -363,3 +364,328 @@ export default ClockPage
 In every page that wants to use MobX, we need to wrap it in `<Provider>`, and initialize its store by calling `initClockStore()` in `getInitialProps()` and constructor.
 
 Run `npm run dev` and go to <http://localhost:3000/clock>.
+
+
+# Step4: React Intl
+
+Internationalization is a must have for most Apps, we're going to use [react-intl](https://github.com/yahoo/react-intl) to internationalize this App.
+
+
+## 4.1 Install packages
+
+    npm install react-intl intl babel-plugin-react-intl accepts glob --save
+
+
+## 4.2 server.js
+
+On the server side we need to support server-side language negotiation, see the following code:
+
+```javascript
+const port = parseInt(process.env.PORT, 10) || 3000
+const dev = process.env.NODE_ENV !== 'production'
+
+// Polyfill Node with `Intl` that has data for all locales.
+// See: https://formatjs.io/guides/runtime-environments/#server
+const IntlPolyfill = require('intl')
+Intl.NumberFormat = IntlPolyfill.NumberFormat
+Intl.DateTimeFormat = IntlPolyfill.DateTimeFormat
+
+const {readFileSync} = require('fs')
+const {basename} = require('path')
+const {createServer} = require('http')
+const { parse } = require('url')
+const accepts = require('accepts')
+const glob = require('glob')
+const next = require('next')
+const mobxReact = require('mobx-react')
+const port = parseInt(process.env.PORT, 10) || 3000
+const dev = process.env.NODE_ENV !== 'production'
+const app = next({dev})
+const handle = app.getRequestHandler()
+
+mobxReact.useStaticRendering(true)
+
+// Get the supported languages by looking for translations in the `lang/` dir.
+const languages = glob.sync('./lang/*.json').map((f) => basename(f, '.json'))
+
+// We need to expose React Intl's locale data on the request for the user's
+// locale. This function will also cache the scripts by lang in memory.
+const localeDataCache = new Map()
+const getLocaleDataScript = (locale) => {
+  const lang = locale.split('-')[0]
+  if (!localeDataCache.has(lang)) {
+    const localeDataFile = require.resolve(`react-intl/locale-data/${lang}`)
+    const localeDataScript = readFileSync(localeDataFile, 'utf8')
+    localeDataCache.set(lang, localeDataScript)
+  }
+  return localeDataCache.get(lang)
+}
+
+// We need to load and expose the translations on the request for the user's
+// locale. These will only be used in production, in dev the `defaultMessage` in
+// each message description in the source code will be used.
+const getMessages = (locale) => {
+  return require(`./lang/${locale}.json`)
+}
+
+app.prepare().then(() => {
+  createServer((req, res) => {
+    const parsedUrl = parse(req.url, true)
+    const accept = accepts(req)
+    let locale = accept.language(languages)
+    if(!locale) locale = 'en'
+    req.locale = locale
+    req.localeDataScript = getLocaleDataScript(locale)
+    req.messages = getMessages(locale)
+    handle(req, res, parsedUrl)
+  }).listen(port, (err) => {
+    if (err) throw err
+    console.log(`> Ready on http://localhost:${port}`)
+  })
+})
+```
+
+
+## 4.3 \_document.js
+
+We need to inject the script `localeDataScript()` from react-intl to every page, so `./pages/_document.js` comes to help:
+
+```jsx
+import Document, {Head, Main, NextScript} from 'next/document'
+
+// The document (which is SSR-only) needs to be customized to expose the locale
+// data for the user's locale for React Intl to work in the browser.
+export default class IntlDocument extends Document {
+  static async getInitialProps (context) {
+    const props = await super.getInitialProps(context)
+    const {req: {locale, localeDataScript}} = context
+    return {
+      ...props,
+      locale,
+      localeDataScript
+    }
+  }
+
+  render () {
+    // Polyfill Intl API for older browsers
+    const polyfill = `https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.${this.props.locale}`
+
+    return (
+      <html>
+        <Head />
+        <body>
+          <Main />
+          <script src={polyfill} />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: this.props.localeDataScript
+            }}
+          />
+          <NextScript />
+        </body>
+      </html>
+    )
+  }
+}
+```
+
+
+## 4.4 PageWithIntl HOC
+
+```jsx
+import React, {Component} from 'react'
+import {IntlProvider, addLocaleData, injectIntl} from 'react-intl'
+
+// Register React Intl's locale data for the user's locale in the browser. This
+// locale data was added to the page by `pages/_document.js`. This only happens
+// once, on initial page load in the browser.
+if (typeof window !== 'undefined' && window.ReactIntlLocaleData) {
+  Object.keys(window.ReactIntlLocaleData).forEach((lang) => {
+    addLocaleData(window.ReactIntlLocaleData[lang])
+  })
+}
+
+export default (Page) => {
+  const IntlPage = injectIntl(Page)
+
+  return class PageWithIntl extends Component {
+    static async getInitialProps (context) {
+      let props
+      if (typeof Page.getInitialProps === 'function') {
+        props = await Page.getInitialProps(context)
+      }
+
+      // Get the `locale` and `messages` from the request object on the server.
+      // In the browser, use the same values that the server serialized.
+      const {req} = context
+      const {locale, messages} = req || window.__NEXT_DATA__.props.initialProps
+
+      // Always update the current time on page load/transition because the
+      // <IntlProvider> will be a new instance even with pushState routing.
+      const now = Date.now()
+
+      return {...props, locale, messages, now}
+    }
+
+    render () {
+      const {locale, messages, now, ...props} = this.props
+      return (
+        <IntlProvider locale={locale} messages={messages} initialNow={now}>
+          <IntlPage {...props} />
+        </IntlProvider>
+      )
+    }
+  }
+}
+```
+
+
+## 4.5 Create a testing page
+
+Let's create a testing page `./pages/react-intl.js`:
+
+```
+import React, {Component} from 'react'
+import {IntlProvider, addLocaleData, injectIntl} from 'react-intl'
+
+// Register React Intl's locale data for the user's locale in the browser. This
+// locale data was added to the page by `pages/_document.js`. This only happens
+// once, on initial page load in the browser.
+if (typeof window !== 'undefined' && window.ReactIntlLocaleData) {
+  Object.keys(window.ReactIntlLocaleData).forEach((lang) => {
+    addLocaleData(window.ReactIntlLocaleData[lang])
+  })
+}
+
+export default (Page) => {
+  const IntlPage = injectIntl(Page)
+
+  return class PageWithIntl extends Component {
+    static async getInitialProps (context) {
+      let props
+      if (typeof Page.getInitialProps === 'function') {
+        props = await Page.getInitialProps(context)
+      }
+
+      // Get the `locale` and `messages` from the request object on the server.
+      // In the browser, use the same values that the server serialized.
+      const {req} = context
+      const {locale, messages} = req || window.__NEXT_DATA__.props.initialProps
+
+      // Always update the current time on page load/transition because the
+      // <IntlProvider> will be a new instance even with pushState routing.
+      const now = Date.now()
+
+      return {...props, locale, messages, now}
+    }
+
+    render () {
+      const {locale, messages, now, ...props} = this.props
+      return (
+        <IntlProvider locale={locale} messages={messages} initialNow={now}>
+          <IntlPage {...props} />
+        </IntlProvider>
+      )
+    }
+  }
+}
+```
+
+
+## 4.6 Messages files
+
+Create a directory `./lang`, put messages files here.
+
+`./lang/en.json`:
+
+```json
+{
+  "description": "An example app integrating React Intl with Next.js",
+  "greeting": "Hello, World!"
+}
+```
+
+`./lang/fr.json`:
+
+```json
+{
+  "description": "Un exemple d'application intégrant React Intl avec Next.js",
+  "greeting": "Bonjour le monde!"
+}
+```
+
+`./lang/zh.json`:
+
+```json
+{
+  "description": "一个将React Intl 与 Next.js 集成的例子",
+  "greeting": "你好，世界！"
+}
+```
+
+Run `npm run dev` and go to <http://localhost:3000/clock>.
+
+
+## 4.7 babel-plugin-react-intl
+
+`babel-plugin-react-intl` is a plugin that extracts string messages for translation from modules that use React Intl. To make it work we need to configure it.
+
+First enable it in `.babelrc`:
+
+```json
+{
+  "presets": ["next/babel"],
+  "plugins": [
+    "transform-decorators-legacy",
+    ["import", { "libraryName": "antd", "style": false }]
+  ],
+  "env": {
+    "development": {
+      "plugins": [
+        "react-intl"
+      ]
+    },
+    "production": {
+      "plugins": [
+        ["react-intl", {
+          "messagesDir": "lang/.messages/"
+        }]
+      ]
+    }
+  }
+}
+```
+
+`"messagesDir": "lang/.messages/"` means this will output a `.json` file corresponding to each component from which React Intl messages were extracted.
+
+Add `lang/.messages/` to the file `.gitignore`.
+
+Then we write a script to merge all files under "lang/.messages/" to a single json file `./lang/en.json`:
+
+```javascript
+const {readFileSync, writeFileSync} = require('fs')
+const {resolve} = require('path')
+const glob = require('glob')
+
+const defaultMessages = glob.sync('./lang/.messages/**/*.json')
+  .map((filename) => readFileSync(filename, 'utf8'))
+  .map((file) => JSON.parse(file))
+  .reduce((messages, descriptors) => {
+    descriptors.forEach(({id, defaultMessage}) => {
+      if (messages.hasOwnProperty(id)) {
+        throw new Error(`Duplicate message id: ${id}`)
+      }
+      messages[id] = defaultMessage
+    })
+    return messages
+  }, {})
+
+writeFileSync('./lang/en.json', JSON.stringify(defaultMessages, null, 2))
+console.log(`> Wrote default messages to: "${resolve('./lang/en.json')}"`)
+```
+
+And add this script to the `build` command in `package.json`:
+
+    "build": "next build && node ./scripts/default-lang",
+
+Run `npm run build` and you will see it generates a file `./lang/en.json`.
