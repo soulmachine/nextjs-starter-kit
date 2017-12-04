@@ -6,7 +6,7 @@ Table of Contents
 -----------------
 1. [Step1: Create an empty Next.js project](#step1-create-an-empty-nextjs-project)
 1. [Step2: Ant Design](#step2-ant-design)
-1. [Step3: MobX](#step2-mobx)
+1. [Step3: MobX](#step3-mobx)
 
 
 
