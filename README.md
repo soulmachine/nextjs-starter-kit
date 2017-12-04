@@ -125,7 +125,7 @@ Note that although we've enabled the plugin, but we pass `false` to the plugin's
 
 Also see this issue [Work with antd? · Issue #484](https://github.com/zeit/next.js/issues/484) and this [Importing CSS files? · Issue #544](https://github.com/zeit/next.js/issues/544).
 
-Create a file `layout.js` in the project root directory with the following code:
+Create a file `./components/layout.js` in the project root directory with the following code:
 
 ```jsx
 import Head from 'next/head'
@@ -146,7 +146,19 @@ export default ({ children }) =>
 
 Make sure the version number is the same as antd `package.json`.
 
-Copy `./pages/index.js` from the official example to `./pages/index.js`, run `npm run dev` and go to <http://localhost:3000>.
+Copy `./pages/index.js` from the official example to `./pages/antd.js`, and add a link to `./pages/index.js`:
+
+```jsx
+import React from 'react'
+import Link from 'next/link'
+
+export default () => <div>
+  <p>Welcome to next.js!</p>
+  <Link href='/antd'>Ant Design</Link>
+</div>
+```
+
+run `npm run dev` and go to <http://localhost:3000>.
 
 
 # Step3: MobX
