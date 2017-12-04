@@ -129,6 +129,9 @@ Create a file `./components/layout.js` in the project root directory with the fo
 
 ```jsx
 import Head from 'next/head'
+import { LocaleProvider } from 'antd'
+import enUS from 'antd/lib/locale-provider/en_US'
+
 export default ({ children }) =>
   <div>
     <Head>
@@ -140,13 +143,15 @@ export default ({ children }) =>
       body {
       }
     `}</style>
-    {children}
+    <LocaleProvider locale={enUS}>
+      <div>{children}</div>
+    </LocaleProvider>
   </div>
 ```
 
 Make sure the version number is the same as antd `package.json`.
 
-Copy `./pages/index.js` from the official example to `./pages/antd.js`, and add a link to `./pages/index.js`:
+Copy `./pages/index.js` from the official example to `./pages/antd.js`(remove LocaleProvider from it), and add a link to `./pages/index.js`:
 
 ```jsx
 import React from 'react'
@@ -154,7 +159,7 @@ import Link from 'next/link'
 
 export default () => <div>
   <p>Welcome to next.js!</p>
-  <Link href='/antd'>Ant Design</Link>
+  <Link href='/antd'><a>Ant Design</a></Link>
 </div>
 ```
 

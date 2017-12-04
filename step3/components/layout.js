@@ -1,4 +1,7 @@
 import Head from 'next/head'
+import { LocaleProvider } from 'antd'
+import enUS from 'antd/lib/locale-provider/en_US'
+
 export default ({ children }) =>
   <div>
     <Head>
@@ -10,5 +13,7 @@ export default ({ children }) =>
       body {
       }
     `}</style>
-    {children}
+    <LocaleProvider locale={enUS}>
+      <div>{children}</div>
+    </LocaleProvider>
   </div>
