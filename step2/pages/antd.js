@@ -1,11 +1,11 @@
-import Layout from '../components/layout.js'
+import Layout from '../components/Layout.js'
 import { Form, Select, InputNumber, DatePicker, Switch, Slider, Button } from 'antd'
 
 const FormItem = Form.Item
 const Option = Select.Option
 
 export default () => (
-  <Layout>
+  <Layout title={"Ant Design"}>
     <div style={{ marginTop: 100 }}>
       <Form layout='horizontal'>
         <FormItem
