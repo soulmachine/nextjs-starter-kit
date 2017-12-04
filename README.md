@@ -381,9 +381,6 @@ Internationalization is a must have for most Apps, we're going to use [react-int
 On the server side we need to support server-side language negotiation, see the following code:
 
 ```javascript
-const port = parseInt(process.env.PORT, 10) || 3000
-const dev = process.env.NODE_ENV !== 'production'
-
 // Polyfill Node with `Intl` that has data for all locales.
 // See: https://formatjs.io/guides/runtime-environments/#server
 const IntlPolyfill = require('intl')
@@ -433,7 +430,7 @@ app.prepare().then(() => {
     const parsedUrl = parse(req.url, true)
     const accept = accepts(req)
     let locale = accept.language(languages)
-    if(!locale) locale = 'en'
+    locale = locale || 'en'
     req.locale = locale
     req.localeDataScript = getLocaleDataScript(locale)
     req.messages = getMessages(locale)
@@ -518,7 +515,7 @@ export default (Page) => {
       // Get the `locale` and `messages` from the request object on the server.
       // In the browser, use the same values that the server serialized.
       const {req} = context
-      const {locale, messages} = req || window.__NEXT_DATA__.props.initialProps
+      const {locale, messages} = req || window.__NEXT_DATA__.props
 
       // Always update the current time on page load/transition because the
       // <IntlProvider> will be a new instance even with pushState routing.
