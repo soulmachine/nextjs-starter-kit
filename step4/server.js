@@ -35,6 +35,48 @@ const getLocaleDataScript = (locale) => {
   return localeDataCache.get(lang)
 }
 
+const antdLocaleCache = new Map()
+const rootToLang = {
+  'ar': 'ar_EG',
+  'bg': 'bg_BG',
+  'ca': 'ca_ES',
+  'cs': 'cs_CZ',
+  'de': 'de_DE',
+  'el': 'el_GR',
+  'en': 'en_US',
+  'es': 'es_ES',
+  'et': 'et_EE',
+  'fa': 'fa_IR',
+  'fi': 'fi_FI',
+  'fr': 'fr_FR',
+  'is': 'is_IS',
+  'it': 'it_IT',
+  'ja': 'ja_JP',
+  'ko': 'ko_KR',
+  'nb': 'nb_NO',
+  'nl': 'nl_NL',
+  'pl': 'pl_PL',
+  'pt': 'pt_PT',
+  'ru': 'ru_RU',
+  'sk': 'sk_SK',
+  'sr': 'sr_RS',
+  'sv': 'sv_SE',
+  'th': 'th_TH',
+  'tr': 'tr_TR',
+  'uk': 'uk_UA',
+  'vi': 'vi_VN',
+  'zh': 'zh_CN'
+}
+const getAntdLocaleData = (locale) => {
+  const root = locale.split('-')[0]
+  const lang = rootToLang[root]
+  if (!antdLocaleCache.has(lang)) {
+    const localeData = require(`antd/lib/locale-provider/${lang}`)
+    antdLocaleCache.set(lang, localeData)
+  }
+  return antdLocaleCache.get(lang)
+}
+
 // We need to load and expose the translations on the request for the user's
 // locale. These will only be used in production, in dev the `defaultMessage` in
 // each message description in the source code will be used.
@@ -51,6 +93,7 @@ app.prepare().then(() => {
     req.locale = locale
     req.localeDataScript = getLocaleDataScript(locale)
     req.messages = getMessages(locale)
+    req.antdLocale = getAntdLocaleData(locale)
     handle(req, res, parsedUrl)
   }).listen(port, (err) => {
     if (err) throw err

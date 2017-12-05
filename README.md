@@ -686,3 +686,100 @@ And add this script to the `build` command in `package.json`:
     "build": "next build && node ./scripts/default-lang",
 
 Run `npm run build` and you will see it generates a file `./lang/en.json`.
+
+
+## 4.8 Antd LocaleProvider
+
+This step is optional unless we want internationalize Antd's builtin strings.
+
+In `server.js` we load :
+
+```javascript
+const antdLocaleCache = new Map()
+const rootToLang = {
+  'ar': 'ar_EG',
+  'bg': 'bg_BG',
+  'ca': 'ca_ES',
+  'cs': 'cs_CZ',
+  'de': 'de_DE',
+  'el': 'el_GR',
+  'en': 'en_US',
+  'es': 'es_ES',
+  'et': 'et_EE',
+  'fa': 'fa_IR',
+  'fi': 'fi_FI',
+  'fr': 'fr_FR',
+  'is': 'is_IS',
+  'it': 'it_IT',
+  'ja': 'ja_JP',
+  'ko': 'ko_KR',
+  'nb': 'nb_NO',
+  'nl': 'nl_NL',
+  'pl': 'pl_PL',
+  'pt': 'pt_PT',
+  'ru': 'ru_RU',
+  'sk': 'sk_SK',
+  'sr': 'sr_RS',
+  'sv': 'sv_SE',
+  'th': 'th_TH',
+  'tr': 'tr_TR',
+  'uk': 'uk_UA',
+  'vi': 'vi_VN',
+  'zh': 'zh_CN'
+}
+const getAntdLocaleData = (locale) => {
+  const root = locale.split('-')[0]
+  const lang = rootToLang[root]
+  if (!antdLocaleCache.has(lang)) {
+    const localeData = require(`antd/lib/locale-provider/${lang}`)
+    antdLocaleCache.set(lang, localeData)
+  }
+  return antdLocaleCache.get(lang)
+}
+```
+
+And we need to wrap `PageWithIntl.js` with Antd `LocaleProvider`:
+
+```diff
+diff --git a/step4/components/PageWithIntl.js b/step4/components/PageWithIntl.js
+index 1bcf0af..cd45005 100644
+--- a/step4/components/PageWithIntl.js
++++ b/step4/components/PageWithIntl.js
+@@ -1,5 +1,6 @@
+ import React, {Component} from 'react'
+ import {IntlProvider, addLocaleData, injectIntl} from 'react-intl'
++import LocaleProvider from 'antd/lib/locale-provider';
+ 
+ // Register React Intl's locale data for the user's locale in the browser. This
+ // locale data was added to the page by `pages/_document.js`. This only happens
+@@ -23,21 +24,23 @@ export default (Page) => {
+       // Get the `locale` and `messages` from the request object on the server.
+       // In the browser, use the same values that the server serialized.
+       const {req} = context
+-      const {locale, messages} = req || window.__NEXT_DATA__.props
++      const {locale, messages, antdLocale} = req || window.__NEXT_DATA__.props
+ 
+       // Always update the current time on page load/transition because the
+       // <IntlProvider> will be a new instance even with pushState routing.
+       const now = Date.now()
+ 
+-      return {...props, locale, messages, now}
++      return {...props, locale, messages, antdLocale, now}
+     }
+ 
+     render () {
+-      const {locale, messages, now, ...props} = this.props
++      const {locale, messages, antdLocale, now, ...props} = this.props
+       return (
+-        <IntlProvider locale={locale} messages={messages} initialNow={now}>
+-          <IntlPage {...props} />
+-        </IntlProvider>
++        <LocaleProvider locale={ antdLocale }>
++          <IntlProvider locale={locale} messages={messages} initialNow={now}>
++            <IntlPage {...props} />
++          </IntlProvider>
++        </LocaleProvider>
+       )
+     }
+   }
+```
