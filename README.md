@@ -248,7 +248,7 @@ import { types, applySnapshot } from "mobx-state-tree"
 const ClockStore = types
   .model({
     lastUpdate: types.Date,
-    light: false,
+    light: types.boolean,
   })
   .actions((self) => {
     let timer;
@@ -276,10 +276,10 @@ let clockStore = null
 
 export default function initClockStore(isServer, snapshot = null) {
   if (isServer) {
-    clockStore = ClockStore.create({ lastUpdate: Date.now() })
+    clockStore = ClockStore.create({ lastUpdate: Date.now(), light: false })
   }
   if (clockStore === null) {
-    clockStore = ClockStore.create({ lastUpdate: Date.now() })
+    clockStore = ClockStore.create({ lastUpdate: Date.now(), light: false  })
   }
   if (snapshot) {
     applySnapshot(clockStore, snapshot)
@@ -543,49 +543,47 @@ Let's create a testing page `./pages/react-intl.js`:
 
 ```
 import React, {Component} from 'react'
-import {IntlProvider, addLocaleData, injectIntl} from 'react-intl'
+import Head from 'next/head'
+import {FormattedMessage, FormattedNumber, defineMessages, FormattedRelative} from 'react-intl'
+import pageWithIntl from '../components/PageWithIntl'
+import Layout from '../components/Layout'
 
-// Register React Intl's locale data for the user's locale in the browser. This
-// locale data was added to the page by `pages/_document.js`. This only happens
-// once, on initial page load in the browser.
-if (typeof window !== 'undefined' && window.ReactIntlLocaleData) {
-  Object.keys(window.ReactIntlLocaleData).forEach((lang) => {
-    addLocaleData(window.ReactIntlLocaleData[lang])
-  })
-}
+const {description} = defineMessages({
+  description: {
+    id: 'description',
+    defaultMessage: 'An example app integrating React Intl with Next.js'
+  }
+})
 
-export default (Page) => {
-  const IntlPage = injectIntl(Page)
+class ReactIntlPage extends Component {
+  static async getInitialProps ({req}) {
+    return {someDate: Date.now()}
+  }
 
-  return class PageWithIntl extends Component {
-    static async getInitialProps (context) {
-      let props
-      if (typeof Page.getInitialProps === 'function') {
-        props = await Page.getInitialProps(context)
-      }
-
-      // Get the `locale` and `messages` from the request object on the server.
-      // In the browser, use the same values that the server serialized.
-      const {req} = context
-      const {locale, messages} = req || window.__NEXT_DATA__.props.initialProps
-
-      // Always update the current time on page load/transition because the
-      // <IntlProvider> will be a new instance even with pushState routing.
-      const now = Date.now()
-
-      return {...props, locale, messages, now}
-    }
-
-    render () {
-      const {locale, messages, now, ...props} = this.props
-      return (
-        <IntlProvider locale={locale} messages={messages} initialNow={now}>
-          <IntlPage {...props} />
-        </IntlProvider>
-      )
-    }
+  render () {
+    return (
+      <Layout title="React Intl">
+        <Head>
+          <meta name='description' content={this.props.intl.formatMessage(description)} />
+        </Head>
+        <p>
+          <FormattedMessage id='greeting' defaultMessage='Hello, World!' />
+        </p>
+        <p>
+          <FormattedNumber value={1000} />
+        </p>
+        <p>
+          <FormattedRelative
+            value={this.props.someDate}
+            updateInterval={1000}
+          />
+        </p>
+      </Layout>
+    )
   }
 }
+
+export default pageWithIntl(ReactIntlPage)
 ```
 
 
@@ -783,3 +781,12 @@ index 1bcf0af..cd45005 100644
      }
    }
 ```
+
+
+# References
+
+* [next.js/examples](https://github.com/zeit/next.js/tree/canary/examples)
+* [Use with React Router 4 · Issue #1632 · zeit/next.js](https://github.com/zeit/next.js/issues/1632)
+* [Allow custom extensions by nelak · Pull Request #2699 · zeit/next.js](https://github.com/zeit/next.js/pull/2699)
+* [next.js/examples/with-typescript at master · zeit/next.js](https://github.com/zeit/next.js/tree/master/examples/with-typescript)
+* [Revision of with-mobx example by michaelsbradleyjr · Pull Request #3260 · zeit/next.js](https://github.com/zeit/next.js/pull/3260)

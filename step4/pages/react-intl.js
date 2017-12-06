@@ -18,7 +18,7 @@ class ReactIntlPage extends Component {
 
   render () {
     return (
-      <Layout>
+      <Layout title="React Intl">
         <Head>
           <meta name='description' content={this.props.intl.formatMessage(description)} />
         </Head>
