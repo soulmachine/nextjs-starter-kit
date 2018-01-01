@@ -2,20 +2,9 @@
   "presets": ["next/babel"],
   "plugins": [
     "transform-decorators-legacy",
-    ["import", { "libraryName": "antd", "style": false }]
-  ],
-  "env": {
-    "development": {
-      "plugins": [
-        "react-intl"
-      ]
-    },
-    "production": {
-      "plugins": [
-        ["react-intl", {
-          "messagesDir": "lang/.messages/"
-        }]
-      ]
-    }
-  }
+    ["import", { "libraryName": "antd", "style": false }],
+    ["react-intl", {
+        "messagesDir": "./lang/.messages/"
+    }]
+  ]
 }
