@@ -14,12 +14,12 @@ class ClockPage extends React.Component {
 
   constructor(props) {
     super(props)
-    this.clockStore = initClockStore(props.isServer, props.initialState)
+    this.state = {clockStore: initClockStore(props.isServer, props.initialState)}
   }
 
   render() {
     return (
-      <Provider clock = {this.clockStore}>
+      <Provider clock = {this.state.clockStore}>
         <div>
           <h1>Clock</h1>
           <Clock />
@@ -30,3 +30,4 @@ class ClockPage extends React.Component {
 }
 
 export default ClockPage
+
