@@ -1,0 +1,10 @@
+{
+  "presets": ["next/babel"],
+  "plugins": [
+    "transform-decorators-legacy",
+    ["import", { "libraryName": "antd", "style": false }],
+    ["react-intl", {
+        "messagesDir": "./lang/.messages/"
+    }]
+  ]
+}

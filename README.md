@@ -8,6 +8,7 @@ Table of Contents
 1. [Step2: Ant Design](#step2-ant-design)
 1. [Step3: MobX](#step3-mobx)
 1. [Step4: React Intl](#step4-react-intl)
+1. [Step5: TypeScript](#step5-typescript)
 
 
 
@@ -278,7 +279,7 @@ export default function initClockStore(isServer, snapshot = null) {
   if (isServer) {
     clockStore = ClockStore.create({ lastUpdate: Date.now(), light: false })
   }
-  if (clockStore === null) {
+  if (clockStore == null) {
     clockStore = ClockStore.create({ lastUpdate: Date.now(), light: false  })
   }
   if (snapshot) {
@@ -632,22 +633,11 @@ First enable it in `.babelrc`:
   "presets": ["next/babel"],
   "plugins": [
     "transform-decorators-legacy",
-    ["import", { "libraryName": "antd", "style": false }]
-  ],
-  "env": {
-    "development": {
-      "plugins": [
-        "react-intl"
-      ]
-    },
-    "production": {
-      "plugins": [
-        ["react-intl", {
-          "messagesDir": "lang/.messages/"
-        }]
-      ]
-    }
-  }
+    ["import", { "libraryName": "antd", "style": false }],
+    ["react-intl", {
+        "messagesDir": "./lang/.messages/"
+    }]
+  ]
 }
 ```
 
@@ -681,7 +671,7 @@ console.log(`> Wrote default messages to: "${resolve('./lang/en.json')}"`)
 
 And add this script to the `build` command in `package.json`:
 
-    "build": "next build && node ./scripts/default-lang",
+    "build": "next build && node ./scripts/default-lang.js",
 
 Run `npm run build` and you will see it generates a file `./lang/en.json`.
 
@@ -781,6 +771,152 @@ index 1bcf0af..cd45005 100644
      }
    }
 ```
+
+
+# Step5: TypeScript
+
+## 5.1 Install TypeScript compiler
+
+
+First install the TypeScript compiler,
+
+    npm install --save-dev typescript
+
+
+## 5.2 Install TypeScript type definitions for libraries
+
+Install all dependented librarys' typings so that vscode can have better code completion for these libraries,
+
+    npm install --save-dev @types/next @types/react @types/react-dom @types/react-intl @types/styled-jsx
+
+We don't need to install typings for `antd`, `mobx`, `react-mobx` and `mobx-state-tree` because they have built-in TypeScript support, i.e., they have their own type definitions.
+
+
+## 5.3 Configure TypeScript
+
+
+### 5.3.1 tsconfig.json
+
+Create a new file `tsconfig.json`, and the content of `tsconfig.json` is as the following:
+
+```
+{
+  "compilerOptions": {
+    "outDir": "build",
+    "rootDir": "src",
+    "strict": true,
+    "module": "ES2015",
+    "target": "ES2017",
+    "jsx": "react-native",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "typeRoots": [
+      "./node_modules/@types/",
+      "./src/@types/"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
+```
+
+In the config above, please pay attention to a few things:
+
+* Use `"jsx": "react-native"` instead of `preserve` because Next.js only supports `.js` file extension, it doesn't recogonize `.jsx` files.
+* Set `rootDir` as `src` and `outDir` as `build`, thus TypeScript will read source code from `./src` and output to `./build`.
+* Use `"include": ["src/**/*"]` to let Typescript only compile files under `./src` and ignore all files outside of `./src`
+* `@types/` directory must be inside `./src`, otherwise Typescript won't compile `.d.ts` files in `@types/`
+
+
+### 5.3.2 server.js
+
+We need to tell Next.js that pages folder changed to `./build` instead of `.` in `server.js`:
+
+```javascript
+const app = next({dev, dir: 'build'})
+```
+
+### 5.3.3 package.json
+
+And we need to update commands in `scripts`:
+
+```json
+  "scripts": {
+    "dev": "concurrently \"tsc --pretty --watch\" \"node server.js\"",
+    "prebuild": "tsc",
+    "build": "next build ./build && node ./scripts/default-lang.js",
+    "start": "NODE_ENV=production node server.js"
+  }
+```
+
+Basically the build process is: `./src` --TypeScript--> `./build` --next-->`./build/.next`.
+
+Add a line `build/` to `.gitignore` to ignore the `./build` directory.
+
+The package `concurrently` is to make tsc and next run in parallel.
+
+    npm install concurrently --save-dev
+
+
+## 5.4 Rewrite all code in Typescript
+
+* Move `./pages/` files to `src/`
+* Move `./components/` files to `src/`
+* Move `./containers/` files to `src/`
+* Rename all `./src/**/*.js` files to `.tsx` files, and rewrite them in Typescript
+* Rename `./stores/ClockStore.js` to `./stores/ClockStore.ts`
+
+Add a file `@types/styled-jsx.d.ts`, to make vscode recognize styled-jsx syntax,
+
+```typescript
+import 'react'
+// Augmentation of React
+declare module 'react' {
+  interface StyleHTMLAttributes<T> extends React.HTMLAttributes<T> {
+    jsx?: boolean;
+    global?: boolean;
+  }
+}
+```
+
+Please read the source code for all details.
+
+
+## 5.5 TSLint
+
+
+### 5.5.1 Install TSLint
+
+    npm install tslint --save-dev
+
+
+### 5.5.2 tslint.json
+
+Configure tslint in `tslint.json`,
+
+```
+{
+  "extends": ["tslint:latest"],
+  "rules": {
+    "semicolon": [true, "never"],
+    "interface-name": [true, "never-prefix"],
+    "no-submodule-imports": false,
+    "no-object-literal-type-assertion": false
+  }
+}
+```
+
+
+### 5.5.3 package.json
+
+Add a command to `scripts` in `package.json`,
+
+    "lint": "tslint \"src/**/*.{ts,tsx}\"",
+
+Now you can run `npm run lint` to lint your source code.
 
 
 # References
