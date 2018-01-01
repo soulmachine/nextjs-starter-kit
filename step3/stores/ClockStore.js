@@ -33,7 +33,7 @@ export default function initClockStore(isServer, snapshot = null) {
   if (isServer) {
     clockStore = ClockStore.create({ lastUpdate: Date.now() })
   }
-  if (clockStore === null) {
+  if (clockStore == null) {
     clockStore = ClockStore.create({ lastUpdate: Date.now() })
   }
   if (snapshot) {
