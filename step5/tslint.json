@@ -1,9 +1,11 @@
 {
   "extends": ["tslint:latest"],
   "rules": {
-    "semicolon": [true, "never"],
+    "arrow-parens": false,
     "interface-name": [true, "never-prefix"],
+    "no-object-literal-type-assertion": false,
     "no-submodule-imports": false,
-    "no-object-literal-type-assertion": false
+    "semicolon": [true, "never"],
+    "trailing-comma": [true, {"multiline": "nerver", "singleline": "never"}]
   }
 }

@@ -3,16 +3,16 @@ import { applySnapshot, types } from "mobx-state-tree"
 const ClockStore = types
   .model({
     lastUpdate: types.Date,
-    light: types.boolean,
+    light: types.boolean
   })
-  .actions((self) => {
+  .actions(self => {
     function update() {
       self.lastUpdate = new Date()
       self.light = true
     }
     return { update }
   })
-  .actions((self) => {
+  .actions(self => {
     let timer: any
     function start() {
       timer = setInterval(() => {
@@ -32,7 +32,10 @@ const ClockStore = types
 export type IClockStore = typeof ClockStore.Type
 let clockStore: IClockStore
 
-export function initClockStore(isServer: boolean, snapshot?: object): IClockStore {
+export function initClockStore(
+  isServer: boolean,
+  snapshot?: object
+): IClockStore {
   if (isServer) {
     clockStore = ClockStore.create({ lastUpdate: Date.now(), light: false })
   }

@@ -7,7 +7,8 @@ export interface ClockContainerProps {
   clock: IClockStore
 }
 
-@inject("clock") @observer
+@inject("clock")
+@observer
 class ClockContainer extends React.Component<ClockContainerProps, any> {
   public componentDidMount() {
     this.props.clock!.start()
@@ -19,7 +20,10 @@ class ClockContainer extends React.Component<ClockContainerProps, any> {
 
   public render() {
     return (
-      <Clock lastUpdate={this.props.clock.lastUpdate} light={this.props.clock.light} />
+      <Clock
+        lastUpdate={this.props.clock.lastUpdate}
+        light={this.props.clock.light}
+      />
     )
   }
 }

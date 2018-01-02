@@ -919,6 +919,28 @@ Add a command to `scripts` in `package.json`,
 Now you can run `npm run lint` to lint your source code.
 
 
+## 5.6 prettier
+
+Prettier is a very popular code formatter for Javascript, Typescript and many other frontend languages, first install it,
+
+    npm install prettier --save-dev
+
+Add a `prettier` command to `"scripts"` section in `package.json` and remove `--fix` option of tslint:
+
+    "lint": "tslint \"src/**/*.{ts,tsx}\"",
+    "prettier": "find ./src -type f | xargs prettier --write"
+
+The `--write` option will modify files in place, so we don't need tslint to fix files.
+
+Configure prettier with `prettier.config.js` file:
+
+```javascript
+module.exports = {
+  semi: false,
+};
+```
+
+
 # References
 
 * [next.js/examples](https://github.com/zeit/next.js/tree/canary/examples)
