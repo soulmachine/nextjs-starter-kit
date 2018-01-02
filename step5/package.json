@@ -16,6 +16,7 @@
     "lint": "tslint \"src/**/*.{ts,tsx}\"",
     "prettier": "find ./src -type f | xargs prettier --write"
   },
+  "pre-commit": ["prettier", "lint"],
   "dependencies": {
     "accepts": "^1.3.4",
     "antd": "^3.0.0",
@@ -39,6 +40,7 @@
     "babel-plugin-import": "^1.6.2",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "concurrently": "^3.5.1",
+    "pre-commit": "^1.2.2",
     "prettier": "^1.9.2",
     "tslint": "^5.8.0",
     "typescript": "^2.6.2"

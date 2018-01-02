@@ -940,6 +940,27 @@ module.exports = {
 };
 ```
 
+Modify `tslint.json` to make its rules not conflict with prettier:
+
+```json
+{
+  "extends": ["tslint:latest"],
+  "rules": {
+    "arrow-parens": false,
+    "interface-name": [true, "never-prefix"],
+    "no-object-literal-type-assertion": false,
+    "no-submodule-imports": false,
+    "semicolon": [true, "never"],
+    "trailing-comma": [true, {"multiline": "nerver", "singleline": "never"}]
+  }
+}
+```
+
+Use `pre-commit` to run `prettier` and `tslint` before commit, 
+
+* Install `pre-commit` by running `npm install pre-commit --save-dev`
+* Add a `pre-commit` section to `package.json`: `"pre-commit": ["prettier", "lint"],`
+
 
 # References
 
