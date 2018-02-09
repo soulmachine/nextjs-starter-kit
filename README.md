@@ -73,7 +73,7 @@ Finally we get a complete package.json file:
     "start": "next start"
   },
   "dependencies": {
-    "next": "^4.1.4",
+    "next": "^5.0.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0"
   }
@@ -134,12 +134,13 @@ import Head from 'next/head'
 import { LocaleProvider } from 'antd'
 import enUS from 'antd/lib/locale-provider/en_US'
 
-export default ({ children }) =>
+export default ({ title, children }) =>
   <div>
     <Head>
+      <title>{ title }</title>
       <meta name='viewport' content='width=device-width, initial-scale=1' />
       <meta charSet='utf-8' />
-      <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/antd/2.13.10/antd.min.css' />
+      <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/antd/3.2.0/antd.min.css' />
     </Head>
     <style jsx global>{`
       body {
