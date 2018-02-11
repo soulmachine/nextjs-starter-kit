@@ -7,7 +7,7 @@ import {
   Slider,
   Switch
 } from "antd"
-import Layout from "../components/Layout.js"
+import Layout from "../components/Layout"
 
 const FormItem = Form.Item
 const Option = Select.Option

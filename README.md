@@ -779,9 +779,9 @@ index 1bcf0af..cd45005 100644
 ## 5.1 Install TypeScript compiler
 
 
-First install the TypeScript compiler,
+First install the TypeScript compiler and the plugin for Next.js,
 
-    npm install --save-dev typescript
+    npm install @zeit/next-typescript typescript --save-dev
 
 
 ## 5.2 Install TypeScript type definitions for libraries
@@ -800,22 +800,33 @@ We don't need to install typings for `antd`, `mobx`, `react-mobx` and `mobx-stat
 
 Create a new file `tsconfig.json`, and the content of `tsconfig.json` is as the following:
 
-```
+```json
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "build",
-    "rootDir": "src",
     "strict": true,
-    "module": "ES2015",
-    "target": "ES2017",
-    "jsx": "react-native",
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "preserve",
     "allowJs": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
     "typeRoots": [
       "./node_modules/@types/",
       "./src/@types/"
+    ],
+    "lib": [
+      "dom",
+      "es2015",
+      "es2016"
     ]
   },
   "include": [
@@ -826,40 +837,60 @@ Create a new file `tsconfig.json`, and the content of `tsconfig.json` is as the 
 
 In the config above, please pay attention to a few things:
 
-* Use `"jsx": "react-native"` instead of `preserve` because Next.js only supports `.js` file extension, it doesn't recogonize `.jsx` files.
-* Set `rootDir` as `src` and `outDir` as `build`, thus TypeScript will read source code from `./src` and output to `./build`.
-* Use `"include": ["src/**/*"]` to let Typescript only compile files under `./src` and ignore all files outside of `./src`
+* Use `"jsx": "preserve"` instead of `react-native` because Next.js supports `.jsx` file extension after version `5.0.0`, previously it only recogonize `.js` files.
 * `@types/` directory must be inside `./src`, otherwise Typescript won't compile `.d.ts` files in `@types/`
 
 
-### 5.3.2 server.js
-
-We need to tell Next.js that pages folder changed to `./build` instead of `.` in `server.js`:
+### 5.3.2 next.config.js
 
 ```javascript
-const app = next({dev, dir: 'build'})
+const withTypescript = require('@zeit/next-typescript')
+module.exports = withTypescript({
+  webpack(config, options) {
+    return config
+  }
+})
 ```
 
-### 5.3.3 package.json
+### 5.3.3 server.js
 
-And we need to update commands in `scripts`:
+By default the `pages` directory is located at the project's root directory, since in this project we move `pages` to `src`, we need to tell Next.js where to find `pages` directory:
+
+```javascript
+const app = next({dev, dir: 'src'})
+```
+
+
+### 5.3.4 package.json
+
+Also we need to tell the `next build` command the location of `pages` directory in `package.json`:
 
 ```json
   "scripts": {
-    "dev": "concurrently \"tsc --pretty --watch\" \"node server.js\"",
-    "prebuild": "tsc",
-    "build": "next build ./build && node ./scripts/default-lang.js",
+    "dev": "node server.js",
+    "build": "next build ./src && node ./scripts/default-lang.js",
     "start": "NODE_ENV=production node server.js"
   }
 ```
 
-Basically the build process is: `./src` --TypeScript--> `./build` --next-->`./build/.next`.
 
-Add a line `build/` to `.gitignore` to ignore the `./build` directory.
+### 5.3.5 Setting a custom build directory
 
-The package `concurrently` is to make tsc and next run in parallel.
+By default `next build` will output files to `src/.next`, which is not clean, I need to move the `.next` folder out of `src`.
 
-    npm install concurrently --save-dev
+And we need to tell Next.js to change the output directory to `../build`, by default it is `src/.next` within the same folder that the `pages` folder resides in. Set `distDir` in `next.config.js`:
+
+```javascript
+const withTypescript = require('@zeit/next-typescript')
+module.exports = withTypescript({
+  webpack(config, options) {
+    return config
+  },
+  distDir: '../build'
+})
+```
+
+Basically the build process is: `./src` -> `next build`-->`./build`, then `server.js` will read files from `./build` and run as a server.
 
 
 ## 5.4 Rewrite all code in Typescript

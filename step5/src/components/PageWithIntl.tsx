@@ -1,4 +1,4 @@
-import LocaleProvider from "antd/lib/locale-provider"
+import LocaleProvider, { Locale } from "antd/lib/locale-provider"
 import { Context } from "next"
 import React, { Component } from "react"
 import {
@@ -21,7 +21,7 @@ interface AdditionalProps {
   locale: string
   messages: object
   initialNow: Date
-  antdLocale: object
+  antdLocale: Locale
 }
 
 export default function pageWithIntl<P extends InjectedIntlProps>(

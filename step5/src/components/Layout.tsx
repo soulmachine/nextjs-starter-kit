@@ -12,7 +12,7 @@ const Layout: React.SFC<{ title: string; children?: React.ReactNode }> = ({
       <meta charSet="utf-8" />
       <link
         rel="stylesheet"
-        href="//cdnjs.cloudflare.com/ajax/libs/antd/3.0.0/antd.min.css"
+        href="//cdnjs.cloudflare.com/ajax/libs/antd/3.2.0/antd.min.css"
       />
     </Head>
     <style jsx global>{`
